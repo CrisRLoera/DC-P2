@@ -106,8 +106,8 @@ for feature in feature_names:
             st.stop()
         user_input.append(encoded)
 
-st.write(f"Características esperadas por el modelo: {len(feature_names)}")
-st.write(feature_names)
+#st.write(f"Características esperadas por el modelo: {len(feature_names)}")
+#st.write(feature_names)
 
 
 # Hacer predicción
