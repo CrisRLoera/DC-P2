@@ -72,7 +72,7 @@ opciones_visuales = {
         "none": "n", "one": "o", "two": "t"
     },
     "ring-type": {
-        "cobwebby": "c", "evanescent": "e", "flaring": "f", "large": "l", "none": "n",
+        "evanescent": "e", "flaring": "f", "large": "l", "none": "n",
         "pendant": "p", "sheathing": "s", "zone": "z"
     },
     "spore-print-color": {
@@ -86,6 +86,9 @@ opciones_visuales = {
     "habitat": {
         "grasses": "g", "leaves": "l", "meadows": "m", "paths": "p",
         "urban": "u", "waste": "w", "woods": "d"
+    },
+    "bruises": {
+    "bruises": "t", "no": "f"
     }
 }
 
@@ -96,13 +99,26 @@ for feature in feature_names:
     if opciones:
         choice = st.selectbox(f"{feature}", list(opciones.keys()))
         valor = opciones[choice]
-    encoded = label_encoders[feature].transform([valor])[0]
-    user_input.append(encoded)
+        try:
+            encoded = label_encoders[feature].transform([valor])[0]
+        except Exception as e:
+            st.error(f"Error al codificar la característica '{feature}': {str(e)}")
+            st.stop()
+        user_input.append(encoded)
+
+st.write(f"Características esperadas por el modelo: {len(feature_names)}")
+st.write(feature_names)
+
 
 # Hacer predicción
 if st.button("Predecir"):
     input_array = np.array([user_input])
     prediction = model.predict(input_array)[0]
-    clase = label_encoders['poisonous'].inverse_transform([prediction])[0]
+    try:
+        clase = label_encoders['poisonous'].inverse_transform([prediction])[0]
+    except Exception as e:
+        st.error(f"Error al decodificar la predicción: {str(e)}")
+        st.stop()
+
     mensaje = "🍄 El hongo es **VENENOSO** ⚠️" if clase == 'p' else "🍽️ El hongo es **COMESTIBLE**"
     st.success(f"Resultado: {mensaje}")
