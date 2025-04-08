@@ -1,52 +1,108 @@
 import streamlit as st
-import pandas as pd
+import pickle
 import numpy as np
-import joblib
 
-# Cargar modelo y codificadores
-modelo, label_encoders, feature_names = joblib.load("modelo.pkl")
+# Cargar modelo y encoders
+with open("modelo.pkl", "rb") as f:
+    model, label_encoders, feature_names = pickle.load(f)
 
 st.title("Predicción de hongos 🍄")
 st.write("Selecciona las características del hongo para predecir si es comestible o venenoso.")
 
-# Diccionario de valores posibles por atributo
-atributos = {
-    "cap-shape": ['b', 'c', 'x', 'f', 'k', 's'],
-    "cap-surface": ['f', 'g', 'y', 's'],
-    "cap-color": ['n', 'b', 'c', 'g', 'r', 'p', 'u', 'e', 'w', 'y'],
-    "bruises": ['t', 'f'],
-    "odor": ['a', 'l', 'c', 'y', 'f', 'm', 'n', 'p', 's'],
-    "gill-attachment": ['a', 'd', 'f', 'n'],
-    "gill-spacing": ['c', 'w', 'd'],
-    "gill-size": ['b', 'n'],
-    "gill-color": ['k', 'n', 'b', 'h', 'g', 'r', 'o', 'p', 'u', 'e', 'w', 'y'],
-    "stalk-shape": ['e', 't'],
-    "stalk-root": ['b', 'c', 'u', 'e', 'z', 'r', '?'],
-    "stalk-surface-above-ring": ['f', 'y', 'k', 's'],
-    "stalk-surface-below-ring": ['f', 'y', 'k', 's'],
-    "stalk-color-above-ring": ['n', 'b', 'c', 'g', 'o', 'p', 'e', 'w', 'y'],
-    "stalk-color-below-ring": ['n', 'b', 'c', 'g', 'o', 'p', 'e', 'w', 'y'],
-    "veil-type": ['p', 'u'],
-    "veil-color": ['n', 'o', 'w', 'y'],
-    "ring-number": ['n', 'o', 't'],
-    "ring-type": ['c', 'e', 'f', 'l', 'n', 'p', 's', 'z'],
-    "spore-print-color": ['k', 'n', 'b', 'h', 'r', 'o', 'u', 'w', 'y'],
-    "population": ['a', 'c', 'n', 's', 'v', 'y'],
-    "habitat": ['g', 'l', 'm', 'p', 'u', 'w', 'd']
+# Diccionario de opciones amigables por campo
+opciones_visuales = {
+    "cap-shape": {
+        "bell": "b", "conical": "c", "convex": "x", "flat": "f", "knobbed": "k", "sunken": "s"
+    },
+    "cap-surface": {
+        "fibrous": "f", "grooves": "g", "scaly": "y", "smooth": "s"
+    },
+    "cap-color": {
+        "brown": "n", "buff": "b", "cinnamon": "c", "gray": "g", "green": "r", "pink": "p",
+        "purple": "u", "red": "e", "white": "w", "yellow": "y"
+    },
+    "bruises?": {
+        "bruises": "t", "no": "f"
+    },
+    "odor": {
+        "almond": "a", "anise": "l", "creosote": "c", "fishy": "y", "foul": "f",
+        "musty": "m", "none": "n", "pungent": "p", "spicy": "s"
+    },
+    "gill-attachment": {
+        "attached": "a", "descending": "d", "free": "f", "notched": "n"
+    },
+    "gill-spacing": {
+        "close": "c", "crowded": "w", "distant": "d"
+    },
+    "gill-size": {
+        "broad": "b", "narrow": "n"
+    },
+    "gill-color": {
+        "black": "k", "brown": "n", "buff": "b", "chocolate": "h", "gray": "g", "green": "r",
+        "orange": "o", "pink": "p", "purple": "u", "red": "e", "white": "w", "yellow": "y"
+    },
+    "stalk-shape": {
+        "enlarging": "e", "tapering": "t"
+    },
+    "stalk-root": {
+        "bulbous": "b", "club": "c", "cup": "u", "equal": "e", "rhizomorphs": "z",
+        "rooted": "r", "missing": "?"
+    },
+    "stalk-surface-above-ring": {
+        "fibrous": "f", "scaly": "y", "silky": "k", "smooth": "s"
+    },
+    "stalk-surface-below-ring": {
+        "fibrous": "f", "scaly": "y", "silky": "k", "smooth": "s"
+    },
+    "stalk-color-above-ring": {
+        "brown": "n", "buff": "b", "cinnamon": "c", "gray": "g", "orange": "o",
+        "pink": "p", "red": "e", "white": "w", "yellow": "y"
+    },
+    "stalk-color-below-ring": {
+        "brown": "n", "buff": "b", "cinnamon": "c", "gray": "g", "orange": "o",
+        "pink": "p", "red": "e", "white": "w", "yellow": "y"
+    },
+    "veil-type": {
+        "partial": "p", "universal": "u"
+    },
+    "veil-color": {
+        "brown": "n", "orange": "o", "white": "w", "yellow": "y"
+    },
+    "ring-number": {
+        "none": "n", "one": "o", "two": "t"
+    },
+    "ring-type": {
+        "cobwebby": "c", "evanescent": "e", "flaring": "f", "large": "l", "none": "n",
+        "pendant": "p", "sheathing": "s", "zone": "z"
+    },
+    "spore-print-color": {
+        "black": "k", "brown": "n", "buff": "b", "chocolate": "h", "green": "r",
+        "orange": "o", "purple": "u", "white": "w", "yellow": "y"
+    },
+    "population": {
+        "abundant": "a", "clustered": "c", "numerous": "n", "scattered": "s",
+        "several": "v", "solitary": "y"
+    },
+    "habitat": {
+        "grasses": "g", "leaves": "l", "meadows": "m", "paths": "p",
+        "urban": "u", "waste": "w", "woods": "d"
+    }
 }
 
-# Crear inputs para cada atributo
+# Crear inputs dinámicamente con nombres amigables
 user_input = []
 for feature in feature_names:
-    opciones = atributos[feature]
-    seleccion = st.selectbox(f"{feature}", opciones)
-    codificado = label_encoders[feature].transform([seleccion])[0]
-    user_input.append(codificado)
+    opciones = opciones_visuales.get(feature, None)
+    if opciones:
+        choice = st.selectbox(f"{feature}", list(opciones.keys()))
+        valor = opciones[choice]
+    encoded = label_encoders[feature].transform([valor])[0]
+    user_input.append(encoded)
 
-# Predecir si el hongo es venenoso o comestible
+# Hacer predicción
 if st.button("Predecir"):
-    entrada = np.array([user_input])
-    pred = modelo.predict(entrada)[0]
-    clase = label_encoders['poisonous'].inverse_transform([pred])[0]
-    resultado = "VENENOSO" if clase == 'p' else "COMESTIBLE"
-    st.success(f"Resultado: El hongo es **{resultado}** 🍄")
+    input_array = np.array([user_input])
+    prediction = model.predict(input_array)[0]
+    clase = label_encoders['poisonous'].inverse_transform([prediction])[0]
+    mensaje = "🍄 El hongo es **VENENOSO** ⚠️" if clase == 'p' else "🍽️ El hongo es **COMESTIBLE**"
+    st.success(f"Resultado: {mensaje}")
