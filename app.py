@@ -14,7 +14,7 @@ atributos = {
     "cap-shape": ['b', 'c', 'x', 'f', 'k', 's'],
     "cap-surface": ['f', 'g', 'y', 's'],
     "cap-color": ['n', 'b', 'c', 'g', 'r', 'p', 'u', 'e', 'w', 'y'],
-    "bruises?": ['t', 'f'],
+    "bruises": ['t', 'f'],
     "odor": ['a', 'l', 'c', 'y', 'f', 'm', 'n', 'p', 's'],
     "gill-attachment": ['a', 'd', 'f', 'n'],
     "gill-spacing": ['c', 'w', 'd'],
